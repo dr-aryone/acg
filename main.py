@@ -1,4 +1,4 @@
-import acg
+from acg import python3
 
 def main():
     pass
