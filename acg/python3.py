@@ -43,15 +43,15 @@ class PythonWriter:
         self.indent -= 1
 
     def write_statement(self, statement: str):
-        self._outfile.write(self.tabs + statement + self.semicolon)
+        self._outfile.write(self.tabs + statement + self.semicolon + '\n')
 
 
-class BaseNode:
+class PythonNode:
     def write_into(self, writer: PythonWriter):
         pass
 
 
-class String(BaseNode):
+class String(PythonNode):
     def __init__(self, string: str):
         self.string = string
 
@@ -65,7 +65,7 @@ class String(BaseNode):
         writer.write(self.string)
 
 
-class Statement(BaseNode):
+class Statement(PythonNode):
     def __init__(self, statement: str):
         self._statement = statement
 
@@ -83,15 +83,27 @@ class SmallStatement(Statement):
     pass
 
 
-Block = NewType('Block', Iterable[Statement])
+class Block(PythonNode):
+    def __init__(self, statements):
+        self._statements = statements
+
+    def __getitem__(self, item):
+        return self._statements[item]
+
+    def write_into(self, writer: PythonWriter):
+        for statement in self._statements:
+            statement.write_into(writer)
 
 
-class Indent(BaseNode):
+BlockType = NewType('Block', Iterable[Statement])
+
+
+class Indent(PythonNode):
     def write_into(self, writer: PythonWriter):
         writer.indent += 1
 
 
-class Dedent(BaseNode):
+class Dedent(PythonNode):
     def write_into(self, writer: PythonWriter):
         writer.indent -= 1
 
@@ -100,12 +112,12 @@ class CompoundStatement(Statement):
     pass
 
 
-class If(BaseNode):
+class If(PythonNode):
     def __init__(self,
-                 if_test: BaseNode,
-                 if_block: Block,
-                 elif_test_blocks: Iterable[Tuple[BaseNode, Block]] = (),
-                 else_block: Optional[Block] = None):
+                 if_test: PythonNode,
+                 if_block: BlockType,
+                 elif_test_blocks: Iterable[Tuple[PythonNode, BlockType]] = (),
+                 else_block: Optional[BlockType] = None):
         self.if_test = if_test
         self.if_block = if_block
         self.elif_test_blocks = elif_test_blocks
@@ -124,7 +136,7 @@ class If(BaseNode):
             writer.write_indent_block(self.else_block)
 
 
-class For(BaseNode):
+class For(PythonNode):
     def __init__(self, exprlist, testlist, block, else_block):
         self.exprlist = exprlist
         self.testlist = testlist

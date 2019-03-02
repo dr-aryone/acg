@@ -8,6 +8,10 @@ def main():
         if_test=String('num < 10'),
         if_block=[
             Statement('num = 10'),
+            Statement('if num:'),
+            Indent(),
+            Statement('num = 0'),
+            Dedent()
         ]
     )
     node.write_into(writer)
