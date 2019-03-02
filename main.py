@@ -1,7 +1,16 @@
-from acg import python3
+from acg.python3 import *
+import sys
+
 
 def main():
-    pass
+    writer = PythonWriter(sys.stdout)
+    node = If(
+        if_test=String('num < 10'),
+        if_block=[
+            Statement('num = 10'),
+        ]
+    )
+    node.write_into(writer)
 
 
 if __name__ == '__main__':
