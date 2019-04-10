@@ -1,144 +1,82 @@
-import io
-from typing import *
 
 _IF = 'if'
 _ELIF = 'elif'
 _ELSE = 'else'
+
 _WHILE = 'while'
+_FOR = 'for'
+
 _COLON = ':'
 _SEMICOLON = ';'
 
-
-class PythonWriter:
-    def __init__(self, outfile: io.TextIOBase, tab='    ',
-                 have_semicolon=False):
-        self._outfile = outfile
+class PythonEnvironment:
+    def __init__(self, 
+            tab = '\t',
+            indent = 0,
+            ):
         self.tab = tab
         self.indent = 0
-        self.have_semicolon = have_semicolon
 
     @property
     def tabs(self):
         return self.tab * self.indent
 
-    @property
-    def semicolon(self):
-        return _SEMICOLON if self.have_semicolon else ''
-
-    def write(self, string):
-        self._outfile.write(string)
-
-    def write_token_colon(self, statement: str):
-        self._outfile.write('{}{}:\n'.format(self.tabs, statement))
-
-    def write_token_condition_colon(self, token: str, condition):
-        self._outfile.write(self.tabs + token + ' ')
-        condition.write_into(self)
-        self._outfile.write(':\n')
-
-    def write_indent_block(self, block):
-        self.indent += 1
-        for statement in block:
-            statement.write_into(self)
-        self.indent -= 1
-
-    def write_statement(self, statement: str):
-        self._outfile.write(self.tabs + statement + self.semicolon + '\n')
-
-
 class PythonNode:
-    def write_into(self, writer: PythonWriter):
-        pass
+    def write(self, outfile, env):
+        raise NotImplementedError('write method')
 
+    def format(self, env):
+        raise NotImplementedError('format method')
 
 class String(PythonNode):
-    def __init__(self, string: str):
+    def __init__(self, string):
         self.string = string
 
-    def __str__(self):
+    def write(self, outfile, env):
+        outfile.write(self.string)
+
+    def format(self, env):
         return self.string
 
-    def __repr__(self):
-        return 'String({!r})'.format(self.string)
-
-    def write_into(self, writer: PythonWriter):
-        writer.write(self.string)
-
-
 class Statement(PythonNode):
-    def __init__(self, statement: str):
-        self._statement = statement
+    def __init__(self, statement):
+        self.statement = statement
 
-    def __str__(self):
-        return self._statement
+    def write(self, outfile, env):
+        outfile.write(self.format(env))
 
-    def __repr__(self):
-        return 'Statement({})'.format(self._statement)
-
-    def write_into(self, writer: PythonWriter):
-        writer.write_statement(self._statement)
-
-
-class SmallStatement(Statement):
-    pass
-
-
-class Block(PythonNode):
-    def __init__(self, statements):
-        self._statements = statements
-
-    def __getitem__(self, item):
-        return self._statements[item]
-
-    def write_into(self, writer: PythonWriter):
-        for statement in self._statements:
-            statement.write_into(writer)
-
-
-BlockType = NewType('Block', Iterable[Statement])
-
+    def format(self, env):
+        '{}{}\n'.format(env.tabs, self.statement)
 
 class Indent(PythonNode):
-    def write_into(self, writer: PythonWriter):
-        writer.indent += 1
-
+    def write(self, outfile, env):
+        env.indent += 1
 
 class Dedent(PythonNode):
-    def write_into(self, writer: PythonWriter):
-        writer.indent -= 1
-
-
-class CompoundStatement(Statement):
-    pass
-
+    def write(self, outfile, env):
+        env.indent -= 1
 
 class If(PythonNode):
-    def __init__(self,
-                 if_test: PythonNode,
-                 if_block: BlockType,
-                 elif_test_blocks: Iterable[Tuple[PythonNode, BlockType]] = (),
-                 else_block: Optional[BlockType] = None):
-        self.if_test = if_test
+    def __init__(self, 
+            if_test, 
+            if_block, 
+            elif_test_blocks = (), 
+            else_block = None,
+            ):
+
+        self.If_test = if_test
         self.if_block = if_block
         self.elif_test_blocks = elif_test_blocks
         self.else_block = else_block
 
-    def write_into(self, writer: PythonWriter):
-        writer.write_token_condition_colon(_IF, self.if_test)
-        writer.write_indent_block(self.if_block)
+    def write(self, outfile, env):
+        # if test
+        outfile.write('{}{} {}{}\n'.format(
+            env.tabs, 
+            _IF, 
+            self.if_test.format(env),
+            _COLON,
+            )
+        )
+        # elif test blocks
 
-        for cond, block in self.elif_test_blocks:
-            writer.write_token_condition_colon(_ELIF, cond)
-            writer.write_indent_block(block)
-
-        if self.else_block:
-            writer.write_token_colon(_ELSE)
-            writer.write_indent_block(self.else_block)
-
-
-class For(PythonNode):
-    def __init__(self, exprlist, testlist, block, else_block):
-        self.exprlist = exprlist
-        self.testlist = testlist
-        self.block = block
-        self.else_block = else_block
