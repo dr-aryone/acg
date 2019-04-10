@@ -28,6 +28,10 @@ class PythonNode:
     def format(self, env):
         raise NotImplementedError('format method')
 
+class PythonBlock:
+    def write(self, outfile, env):
+        raise NotImplementedError('write method')
+
 class String(PythonNode):
     def __init__(self, string):
         self.string = string
@@ -57,14 +61,15 @@ class Dedent(PythonNode):
         env.indent -= 1
 
 class If(PythonNode):
-    def __init__(self, 
+    def __init__(
+            self, 
             if_test, 
             if_block, 
             elif_test_blocks = (), 
             else_block = None,
             ):
 
-        self.If_test = if_test
+        self.if_test = if_test
         self.if_block = if_block
         self.elif_test_blocks = elif_test_blocks
         self.else_block = else_block
@@ -78,5 +83,76 @@ class If(PythonNode):
             _COLON,
             )
         )
-        # elif test blocks
+
+        # if block
+        env.indent += 1
+        self.if_block.write(outfile, env)
+        env.indent -= 1
+
+        for test, block in self.elif_test_blocks:
+
+            # elif test
+            outfile.write('{}{} {}{}\n'.format(
+                env.tabs, 
+                _ELIF, 
+                test.format(env),
+                _COLON,
+                )
+            )
+
+            # elif block
+            env.indent += 1
+            block.write(outfile, env)
+            env.indent -= 1
+
+        # else block
+        if self.else_block is not None:
+            outfile.write('{}{}\n'.format(
+                _ELSE,
+                _COLON,
+                )
+            )
+
+            env.indent += 1
+            self.else_block.write(outfile, env)
+            env.indent -= 1
+
+class While(PythonNode):
+    def __init__(
+            self,
+            test,
+            block,
+            else_block = None,
+            ):
+        self.test = test
+        self.block = block
+        self.else_block = else_block
+
+    def write(self, outfile, env):
+
+        # test
+        outfile.write('{}{} {}{}\n'.format(
+            env.tabs, 
+            _WHILE, 
+            self.test.format(env),
+            _COLON,
+            )
+        )
+
+        # block
+        env.indent += 1
+        self.else_block.write(outfile, env)
+        env.indent -= 1
+
+        # else block
+        if self.else_block is not None:
+            outfile.write('{}{}\n'.format(
+                _ELSE,
+                _COLON,
+                )
+            )
+
+            env.indent += 1
+            self.else_block.write(outfile, env)
+            env.indent -= 1
 
