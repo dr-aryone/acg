@@ -6,6 +6,8 @@ _ELSE = 'else'
 _WHILE = 'while'
 _FOR = 'for'
 
+_PASS = 'pass'
+
 _COLON = ':'
 _SEMICOLON = ';'
 
@@ -22,56 +24,58 @@ class PythonEnvironment:
         return self.tab * self.indent
 
 class PythonNode:
-    def write(self, outfile, env):
-        raise NotImplementedError('write method')
-
     def format(self, env):
         raise NotImplementedError('format method')
-
-class PythonBlock:
-    def write(self, outfile, env):
-        raise NotImplementedError('write method')
 
 class String(PythonNode):
     def __init__(self, string):
         self.string = string
 
-    def write(self, outfile, env):
-        outfile.write(self.string)
-
     def format(self, env):
         return self.string
 
-class Statement(PythonNode):
+class PythonBlock:
+    def write(self, outfile, env):
+        raise NotImplementedError('write method')
+
+class Statement(PythonBlock):
     def __init__(self, statement):
         self.statement = statement
 
     def write(self, outfile, env):
-        outfile.write(self.format(env))
+        outfile.write('{}{}\n'.format(env.tabs, self.statement))
 
-    def format(self, env):
-        '{}{}\n'.format(env.tabs, self.statement)
-
-class Indent(PythonNode):
+class Indent(PythonBlock):
     def write(self, outfile, env):
         env.indent += 1
 
-class Dedent(PythonNode):
+class Dedent(PythonBlock):
     def write(self, outfile, env):
         env.indent -= 1
 
-class If(PythonNode):
+class Pass(PythonBlock):
+    def write(self, outfile, env):
+        outfile.write('{}{}\n'.format(env.tabs, _PASS))
+
+class Block(PythonBlock):
+    def __init__(self, *statements):
+        self.statements = list(statements) or [Pass()]
+
+    def write(self, outfile, env):
+        for statement in self.statements:
+            statement.write(outfile, env)
+
+
+class If(PythonBlock):
     def __init__(self, 
             if_test, 
             if_block, 
-            elif_test_blocks = (), 
-            else_block = None,
+            *elifs_else,
             ):
 
         self.if_test = if_test
         self.if_block = if_block
-        self.elif_test_blocks = elif_test_blocks
-        self.else_block = else_block
+        self.elifs_else = elifs_else
 
     def write(self, outfile, env):
         # if test
@@ -85,7 +89,34 @@ class If(PythonNode):
         )
         # if block
         env.indent += 1
-
-        # elif test blocks
-
-
+        self.if_block.write(outfile, env)
+        env.indent -= 1
+        # elif test block
+        for i in range(0, (len(self.elifs_else) // 2) * 2, 2):
+            # elif test
+            outfile.write(
+                '{}{} {}{}\n'.format(
+                    env.tabs,
+                    _ELIF,
+                    self.elifs_else[i].format(env),
+                    _COLON,
+                )
+            )
+            # elif block
+            env.indent += 1
+            self.elifs_else[i + 1].write(outfile, env)
+            env.indent -= 1
+        # else block
+        if len(self.elifs_else) % 2:
+            # else
+            outfile.write(
+                '{}{}{}\n'.format(
+                    env.tabs,
+                    _ELSE,
+                    _COLON,
+                )
+            )
+            # else block
+            env.indent += 1
+            self.elifs_else[-1].write(outfile, env)
+            env.indent -= 1
