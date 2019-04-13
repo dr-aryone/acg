@@ -7,6 +7,7 @@ _WHILE = 'while'
 _FOR = 'for'
 
 _PASS = 'pass'
+_RAISE = 'raise'
 
 _COLON = ':'
 _SEMICOLON = ';'
@@ -43,7 +44,9 @@ class Statement(PythonBlock):
         self.statement = statement
 
     def write(self, outfile, env):
-        outfile.write('{}{}\n'.format(env.tabs, self.statement))
+        outfile.write(
+            '{}{}\n'.format(env.tabs, self.statement.format(env))
+        )
 
 class Indent(PythonBlock):
     def write(self, outfile, env):
@@ -57,6 +60,15 @@ class Pass(PythonBlock):
     def write(self, outfile, env):
         outfile.write('{}{}\n'.format(env.tabs, _PASS))
 
+class Raise(PythonBlock):
+    def __init__(self, exc):
+        self.exc = exc
+
+    def write(self, outfile, env):
+        outfile.write(
+            '{}{} {}'.format(env.tabs, _RAISE, self.exc.format(env))
+        )
+
 class Block(PythonBlock):
     def __init__(self, *statements):
         self.statements = list(statements) or [Pass()]
@@ -64,7 +76,6 @@ class Block(PythonBlock):
     def write(self, outfile, env):
         for statement in self.statements:
             statement.write(outfile, env)
-
 
 class If(PythonBlock):
     def __init__(self, 

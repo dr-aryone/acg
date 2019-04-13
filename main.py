@@ -9,6 +9,7 @@ def main():
         Block(
             Statement("goodbye"),
         ),
+        String("Bye"),
             Block(),
     )
     node.write(sys.stdout, env)
