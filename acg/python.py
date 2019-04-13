@@ -8,6 +8,7 @@ _FOR = 'for'
 
 _PASS = 'pass'
 _RAISE = 'raise'
+_BREAK = 'break'
 
 _COLON = ':'
 _SEMICOLON = ';'
@@ -60,6 +61,10 @@ class Pass(PythonBlock):
     def write(self, outfile, env):
         outfile.write('{}{}\n'.format(env.tabs, _PASS))
 
+class Break(PythonBlock):
+    def write(self, outfile, env):
+        outfile.write('{}{}\n'.format(env.tabs, _BREAK))
+
 class Raise(PythonBlock):
     def __init__(self, exc):
         self.exc = exc
@@ -102,6 +107,7 @@ class If(PythonBlock):
         env.indent += 1
         self.if_block.write(outfile, env)
         env.indent -= 1
+        
         # elif test block
         for i in range(0, (len(self.elifs_else) // 2) * 2, 2):
             # elif test
@@ -117,6 +123,7 @@ class If(PythonBlock):
             env.indent += 1
             self.elifs_else[i + 1].write(outfile, env)
             env.indent -= 1
+
         # else block
         if len(self.elifs_else) % 2:
             # else
