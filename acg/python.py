@@ -28,6 +28,10 @@ class PythonNode:
     def format(self, env):
         raise NotImplementedError('format method')
 
+class PythonBlock:
+    def write(self, outfile, env):
+        raise NotImplementedError('write method')
+
 class String(PythonNode):
     def __init__(self, string):
         self.string = string
@@ -64,19 +68,24 @@ class If(PythonNode):
             else_block = None,
             ):
 
-        self.If_test = if_test
+        self.if_test = if_test
         self.if_block = if_block
         self.elif_test_blocks = elif_test_blocks
         self.else_block = else_block
 
     def write(self, outfile, env):
         # if test
-        outfile.write('{}{} {}{}\n'.format(
-            env.tabs, 
-            _IF, 
-            self.if_test.format(env),
-            _COLON,
+        outfile.write(
+            '{}{} {}{}\n'.format(
+                env.tabs,
+                _IF,
+                self.if_test.format(env),
+                _COLON,
             )
         )
+        # if block
+        env.indent += 1
+
         # elif test blocks
+
 
