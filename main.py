@@ -10,10 +10,11 @@ def main():
             Statement("goodbye"),
         ),
         String("Bye"),
-            Block(),
+        Block(
+            Pass(),
+        ),
     )
     node.write(sys.stdout, env)
-
 
 if __name__ == '__main__':
     main()

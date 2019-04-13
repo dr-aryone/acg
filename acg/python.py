@@ -9,6 +9,7 @@ _FOR = 'for'
 _PASS = 'pass'
 _RAISE = 'raise'
 _BREAK = 'break'
+_CONTINUE = 'continue'
 
 _COLON = ':'
 _SEMICOLON = ';'
@@ -64,6 +65,10 @@ class Pass(PythonBlock):
 class Break(PythonBlock):
     def write(self, outfile, env):
         outfile.write('{}{}\n'.format(env.tabs, _BREAK))
+
+class Continue(PythonBlock):
+    def write(self, outfile, env):
+        outfile.write('{}{}\n'.format(env.tabs, _CONTINUE))
 
 class Raise(PythonBlock):
     def __init__(self, exc):
