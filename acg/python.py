@@ -14,7 +14,7 @@ _COLON = ':'
 _SEMICOLON = ';'
 
 class PythonEnvironment:
-    def __init__(self, 
+    def __init__(self,
             tab = '\t',
             indent = 0,
             ):
@@ -83,9 +83,9 @@ class Block(PythonBlock):
             statement.write(outfile, env)
 
 class If(PythonBlock):
-    def __init__(self, 
-            if_test, 
-            if_block, 
+    def __init__(self,
+            if_test,
+            if_block,
             *elifs_else,
             ):
 
@@ -107,7 +107,7 @@ class If(PythonBlock):
         env.indent += 1
         self.if_block.write(outfile, env)
         env.indent -= 1
-        
+
         # elif test block
         for i in range(0, (len(self.elifs_else) // 2) * 2, 2):
             # elif test
