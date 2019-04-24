@@ -1,21 +1,30 @@
+#!/usr/bin/python3
+
 from acg.python3 import *
 import sys
 
-
 def main():
-    writer = PythonWriter(sys.stdout)
-    node = If(
-        if_test=String('num < 10'),
-        if_block=[
-            Statement('num = 10'),
-            Statement('if num:'),
-            Indent(),
-            Statement('num = 0'),
-            Dedent()
-        ]
-    )
-    node.write_into(writer)
 
+    node = \
+        Block(
+            If(
+                String('num < 10'),
+                Block(
+                    Statement('print("hello world")'),
+                ),
+            ),
+            While(
+                String('num != 0'),
+                Block(
+                    Statement('num -= 1'),
+                ),
+            ),
+        )
+
+
+    env = PythonEnvironment(' ' * 4)
+
+    node.write(sys.stdout, env)
 
 if __name__ == '__main__':
     main()
