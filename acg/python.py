@@ -14,11 +14,14 @@ _CONTINUE = 'continue'
 _COLON = ':'
 _SEMICOLON = ';'
 
+# --- initials ---
+
 class PythonEnvironment:
     def __init__(self,
             tab = '\t',
             indent = 0,
             ):
+
         self.tab = tab
         self.indent = 0
 
@@ -30,6 +33,12 @@ class PythonNode:
     def format(self, env):
         raise NotImplementedError('format method')
 
+class PythonBlock:
+    def write(self, outfile, env):
+        raise NotImplementedError('write method')
+
+# --- contents
+
 class String(PythonNode):
     def __init__(self, string):
         self.string = string
@@ -37,9 +46,6 @@ class String(PythonNode):
     def format(self, env):
         return self.string
 
-class PythonBlock:
-    def write(self, outfile, env):
-        raise NotImplementedError('write method')
 
 class Statement(PythonBlock):
     def __init__(self, statement):
